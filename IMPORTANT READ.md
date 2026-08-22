@@ -1,1 +1,0 @@
-ignore the "claude" folder and the "agents" folder i tried to integrate a claude key and like 2 tradingview api and nexus api and a yaho.com api but it didnt work and kept telling me that there were some errors with loading the data so i need to look into that.
