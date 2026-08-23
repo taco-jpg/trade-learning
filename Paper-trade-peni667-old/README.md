@@ -12,8 +12,15 @@ Client-side paper trading app built with React + Vite for Cloudflare Pages. The 
 ## Getting Started
 ```bash
 npm install
+cp .env.example .env.local
+# Add your Finnhub API key to .env.local to enable stock quotes.
 npm run dev
 ```
+
+Crypto quotes work without a key. Stock quotes require a Finnhub key in
+`VITE_FINNHUB_API_KEY`; the local environment file is ignored by Git so the key
+is not committed. Market-data requests time out after 10 seconds and surface a
+provider error while retaining the last cached quote.
 
 ## Build
 ```bash

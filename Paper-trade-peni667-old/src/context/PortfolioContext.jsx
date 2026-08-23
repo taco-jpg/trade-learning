@@ -109,10 +109,6 @@ export const PortfolioProvider = ({ children }) => {
     }
   }, [hydrated, market.prices, market.timestamp])
 
-  useEffect(() => {
-    if (market.error) setError(market.error)
-  }, [market.error])
-
   // ── Derived state ─────────────────────────────────────────────
   const positions = useMemo(() => selectPositions(state), [state])
   const portfolioValue = useMemo(() => calculatePortfolioValue(state, positions), [state, positions])
@@ -176,7 +172,7 @@ export const PortfolioProvider = ({ children }) => {
       positions,
       portfolioValue,
       realizedPnl,
-      error,
+      error: error || market.error,
       priceLoading: market.loading,
       providerStatus: market.providerStatus,
       refreshPrices: market.refresh,
@@ -186,7 +182,7 @@ export const PortfolioProvider = ({ children }) => {
       resetPortfolio,
       importPortfolio,
     }),
-    [state, positions, portfolioValue, realizedPnl, error, market.loading, market.providerStatus, market.refresh, executeBuy, executeSell, addBuyingPower, resetPortfolio, importPortfolio]
+    [state, positions, portfolioValue, realizedPnl, error, market.error, market.loading, market.providerStatus, market.refresh, executeBuy, executeSell, addBuyingPower, resetPortfolio, importPortfolio]
   )
 
   return <PortfolioContext.Provider value={contextValue}>{children}</PortfolioContext.Provider>
