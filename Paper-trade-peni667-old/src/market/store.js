@@ -29,6 +29,7 @@ const MAX_BACKOFF_STEPS = 3
 // }
 
 export function useMarketStore(symbols = SUPPORTED_SYMBOLS) {
+  const symbolsKey = symbols.join(',')
   const [state, setState] = useState({
     prices: {},
     pricingModels: {},
@@ -51,7 +52,7 @@ export function useMarketStore(symbols = SUPPORTED_SYMBOLS) {
     setLoading(true)
     setError(null)
 
-    const promise = fetchAllPrices(symbols)
+    const promise = fetchAllPrices(symbolsKey.split(','))
       .then((result) => {
         if (!mounted.current) return
 
@@ -108,7 +109,7 @@ export function useMarketStore(symbols = SUPPORTED_SYMBOLS) {
 
     inflight.current = promise
     return promise
-  }, [symbols.join(',')])
+  }, [symbolsKey])
 
   // ── Adaptive backoff polling (setTimeout chain, not setInterval)
   useEffect(() => {

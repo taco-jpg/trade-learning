@@ -8,6 +8,8 @@ Client-side paper trading app built with React + Vite for Cloudflare Pages. The 
 - Trading engine with leverage (1x–10x), stop loss, take profit, and liquidation at -100% loss.
 - IndexedDB persistence with import/export/reset.
 - Dark, minimalist UI with TradingView chart integration.
+- A 40-lesson trading curriculum organized into eight modules.
+- Separate module quizzes with answer explanations and locally saved progress.
 
 ## Getting Started
 ```bash

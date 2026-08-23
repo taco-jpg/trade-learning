@@ -1,6 +1,10 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Trade from './pages/Trade'
+import Learn from './pages/Learn'
+import Lesson from './pages/Lesson'
+import Quizzes from './pages/Quizzes'
+import Quiz from './pages/Quiz'
 import './App.css'
 
 const App = () => (
@@ -14,6 +18,8 @@ const App = () => (
         </div>
       </div>
       <nav>
+        <NavLink to="/learn">Learn</NavLink>
+        <NavLink to="/quizzes">Quizzes</NavLink>
         <NavLink to="/dash">Dashboard</NavLink>
         <NavLink to="/trade">Trade</NavLink>
       </nav>
@@ -23,10 +29,13 @@ const App = () => (
         <Route path="/" element={<Navigate to="/dash" replace />} />
         <Route path="/dash" element={<Dashboard />} />
         <Route path="/trade" element={<Trade />} />
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/learn/:lessonSlug" element={<Lesson />} />
+        <Route path="/quizzes" element={<Quizzes />} />
+        <Route path="/quizzes/:quizSlug" element={<Quiz />} />
       </Routes>
     </main>
   </div>
 )
 
 export default App
-
