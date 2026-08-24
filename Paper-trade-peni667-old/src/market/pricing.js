@@ -6,7 +6,7 @@
 // Rule 3: This engine normalizes: median, last trade, index, settlement.
 // Rule 4: Router selects DATA SOURCE — this engine selects PRICE MEANING.
 
-import { INSTRUMENT_TYPES, PRICING_TYPES, createPricingModel, createRawPrice } from './types.js'
+import { INSTRUMENT_TYPES, PRICING_TYPES, createPricingModel } from './types.js'
 
 // ── Pricing Model Resolution ───────────────────────────────────
 // Maps CanonicalInstrument → PricingModel

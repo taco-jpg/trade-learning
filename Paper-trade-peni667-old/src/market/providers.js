@@ -31,8 +31,43 @@ const coingeckoIdMap = {
   OP: 'optimism',
 }
 
-export function configureCoinGecko(mapping) {
+const providerConfig = {
+  fetch: (...args) => globalThis.fetch(...args),
+  timeoutMs: 10_000,
+  coinGeckoUrl: 'https://api.coingecko.com/api/v3/simple/price',
+  stockUrl: '/api/quotes',
+}
+
+function applyOptions(options = {}) {
+  if (options.fetch) providerConfig.fetch = options.fetch
+  if (options.timeoutMs != null) providerConfig.timeoutMs = options.timeoutMs
+}
+
+async function requestJson(url) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), providerConfig.timeoutMs)
+
+  try {
+    const response = await providerConfig.fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    const data = await response.json()
+    if (data == null || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('API returned an invalid response')
+    }
+    return data
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+export function configureCoinGecko(mapping = {}, options = {}) {
   Object.assign(coingeckoIdMap, mapping)
+  applyOptions(options)
+  if (options.url) providerConfig.coinGeckoUrl = options.url
 }
 
 registerProvider({
@@ -57,10 +92,8 @@ registerProvider({
     if (!resolved.length) return {}
 
     const ids = [...new Set(resolved.map((r) => r.id))].join(',')
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
-    const response = await fetch(url)
-    if (!response.ok) throw new Error(`CoinGecko ${response.status}`)
-    const data = await response.json()
+    const query = new URLSearchParams({ ids, vs_currencies: 'usd' })
+    const data = await requestJson(`${providerConfig.coinGeckoUrl}?${query}`)
 
     const now = Date.now()
     const result = {}
@@ -80,31 +113,18 @@ registerProvider({
   },
 })
 
-// ── Finnhub ────────────────────────────────────────────────────
-// Equities, indices. Requires VITE_FINNHUB_API_KEY. CORS-safe.
+// ── Stooq (through our keyless Cloudflare Pages function) ─────
+// Equities and indices. No account or API key required.
 //
-// Emits: RawPrice { venue: 'finnhub', price, bid, ask, timestamp }
+// Emits: RawPrice { venue: 'stooq', price, timestamp }
 
-const finnhubSymbolMap = {
-  AAPL: 'AAPL',
-  TSLA: 'TSLA',
-  MSFT: 'MSFT',
-  GOOGL: 'GOOGL',
-  AMZN: 'AMZN',
-  SPY: 'SPY',
-  QQQ: 'QQQ',
-  META: 'META',
-  NVDA: 'NVDA',
+export function configureStockApi(options = {}) {
+  applyOptions(options)
+  if (options.url) providerConfig.stockUrl = options.url
 }
-
-export function configureFinnhub(mapping) {
-  Object.assign(finnhubSymbolMap, mapping)
-}
-
-const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_API_KEY || ''
 
 registerProvider({
-  name: 'finnhub',
+  name: 'stooq',
   supports: [
     {
       assetClass: 'equity',
@@ -119,36 +139,21 @@ registerProvider({
   ],
 
   async fetch(instruments) {
-    if (!instruments.length || !FINNHUB_KEY) return {}
-
-    const results = await Promise.allSettled(
-      instruments.map(async (inst) => {
-        const symbol = finnhubSymbolMap[inst.baseAsset] || inst.baseAsset
-        const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`
-        const response = await fetch(url)
-        if (!response.ok) throw new Error(`Finnhub ${response.status}`)
-        const data = await response.json()
-        const price = data.c || data.pc || null
-        if (price == null) return null
-        return {
-          symbol: inst.symbol,
-          raw: createRawPrice({
-            symbol: inst.symbol,
-            price,
-            timestamp: (data.t || Math.floor(Date.now() / 1000)) * 1000,
-            venue: 'finnhub',
-            bid: data.l ?? null,
-            ask: data.h ?? null,
-          }),
-        }
-      })
-    )
+    if (!instruments.length) return {}
+    const symbols = instruments.map((instrument) => instrument.baseAsset).join(',')
+    const query = new URLSearchParams({ symbols })
+    const data = await requestJson(`${providerConfig.stockUrl}?${query}`)
 
     const result = {}
-    for (const r of results) {
-      if (r.status === 'fulfilled' && r.value != null) {
-        result[r.value.symbol] = [r.value.raw]
-      }
+    for (const instrument of instruments) {
+      const quote = data.quotes?.[instrument.baseAsset]
+      if (!Number.isFinite(quote?.price) || quote.price <= 0) continue
+      result[instrument.symbol] = [createRawPrice({
+        symbol: instrument.symbol,
+        price: quote.price,
+        timestamp: quote.timestamp || Date.now(),
+        venue: 'stooq',
+      })]
     }
     return result
   },

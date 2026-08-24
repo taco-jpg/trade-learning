@@ -9,7 +9,7 @@ const App = () => (
       <div className="brand">
         <span className="dot" />
         <div>
-          <h1>Paper Trade</h1>
+          <h1>Yamboisid</h1>
           <p>Client-side paper trading with live market data.</p>
         </div>
       </div>

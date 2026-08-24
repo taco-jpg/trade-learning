@@ -3,7 +3,7 @@ export { useMarketStore as useMarketData } from '../market/store'
 export { SUPPORTED_SYMBOLS } from '../market/providers'
 export { registerSymbol } from '../market/resolver'
 export { registerProvider } from '../market/registry'
-export { configureCoinGecko, configureFinnhub } from '../market/providers'
+export { configureCoinGecko, configureStockApi } from '../market/providers'
 export {
   createInstrument,
   createRawPrice,
