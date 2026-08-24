@@ -31,8 +31,44 @@ const coingeckoIdMap = {
   OP: 'optimism',
 }
 
-export function configureCoinGecko(mapping) {
+const providerConfig = {
+  fetch: (...args) => globalThis.fetch(...args),
+  timeoutMs: 10_000,
+  coinGeckoUrl: 'https://api.coingecko.com/api/v3/simple/price',
+  finnhubUrl: 'https://finnhub.io/api/v1/quote',
+  finnhubKey: import.meta.env?.VITE_FINNHUB_API_KEY || '',
+}
+
+function applyOptions(options = {}) {
+  if (options.fetch) providerConfig.fetch = options.fetch
+  if (options.timeoutMs != null) providerConfig.timeoutMs = options.timeoutMs
+}
+
+async function requestJson(url) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), providerConfig.timeoutMs)
+
+  try {
+    const response = await providerConfig.fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    const data = await response.json()
+    if (data == null || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('API returned an invalid response')
+    }
+    return data
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+export function configureCoinGecko(mapping = {}, options = {}) {
   Object.assign(coingeckoIdMap, mapping)
+  applyOptions(options)
+  if (options.url) providerConfig.coinGeckoUrl = options.url
 }
 
 registerProvider({
@@ -57,10 +93,8 @@ registerProvider({
     if (!resolved.length) return {}
 
     const ids = [...new Set(resolved.map((r) => r.id))].join(',')
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
-    const response = await fetch(url)
-    if (!response.ok) throw new Error(`CoinGecko ${response.status}`)
-    const data = await response.json()
+    const query = new URLSearchParams({ ids, vs_currencies: 'usd' })
+    const data = await requestJson(`${providerConfig.coinGeckoUrl}?${query}`)
 
     const now = Date.now()
     const result = {}
@@ -97,11 +131,12 @@ const finnhubSymbolMap = {
   NVDA: 'NVDA',
 }
 
-export function configureFinnhub(mapping) {
+export function configureFinnhub(mapping = {}, options = {}) {
   Object.assign(finnhubSymbolMap, mapping)
+  applyOptions(options)
+  if (options.url) providerConfig.finnhubUrl = options.url
+  if (options.apiKey != null) providerConfig.finnhubKey = options.apiKey.trim()
 }
-
-const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_API_KEY || ''
 
 registerProvider({
   name: 'finnhub',
@@ -119,17 +154,18 @@ registerProvider({
   ],
 
   async fetch(instruments) {
-    if (!instruments.length || !FINNHUB_KEY) return {}
+    if (!instruments.length) return {}
+    if (!providerConfig.finnhubKey) {
+      throw new Error('Finnhub is not configured: set VITE_FINNHUB_API_KEY')
+    }
 
     const results = await Promise.allSettled(
       instruments.map(async (inst) => {
         const symbol = finnhubSymbolMap[inst.baseAsset] || inst.baseAsset
-        const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`
-        const response = await fetch(url)
-        if (!response.ok) throw new Error(`Finnhub ${response.status}`)
-        const data = await response.json()
-        const price = data.c || data.pc || null
-        if (price == null) return null
+        const query = new URLSearchParams({ symbol, token: providerConfig.finnhubKey })
+        const data = await requestJson(`${providerConfig.finnhubUrl}?${query}`)
+        const price = data.c ?? data.pc ?? null
+        if (!Number.isFinite(price) || price <= 0) return null
         return {
           symbol: inst.symbol,
           raw: createRawPrice({
@@ -149,6 +185,9 @@ registerProvider({
       if (r.status === 'fulfilled' && r.value != null) {
         result[r.value.symbol] = [r.value.raw]
       }
+    }
+    if (results.length > 0 && results.every((r) => r.status === 'rejected')) {
+      throw new Error(`Finnhub request failed: ${results[0].reason?.message || 'unknown error'}`)
     }
     return result
   },
