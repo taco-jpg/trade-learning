@@ -108,7 +108,7 @@ export function useMarketStore(symbols = SUPPORTED_SYMBOLS) {
 
     inflight.current = promise
     return promise
-  }, [symbols.join(',')])
+  }, [symbols])
 
   // ── Adaptive backoff polling (setTimeout chain, not setInterval)
   useEffect(() => {

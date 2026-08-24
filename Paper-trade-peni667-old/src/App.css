@@ -6,6 +6,118 @@
   color: var(--text);
 }
 
+.crazy-confetti {
+  display: none;
+}
+
+.crazy-toggle {
+  border-color: #ff4fd8;
+  background: linear-gradient(135deg, #ff4fd8, #ffe600);
+  color: #26002f;
+  font-weight: 800;
+  transform: rotate(-2deg);
+}
+
+.crazytown {
+  --bg: #240046;
+  --panel: rgba(22, 2, 54, 0.82);
+  --border: #ffe600;
+  --text: #fff7ff;
+  --muted: #73fbd3;
+  --accent: #ff4fd8;
+  background:
+    repeating-radial-gradient(circle at 20% 20%, transparent 0 28px, rgba(255, 230, 0, 0.14) 30px 33px),
+    linear-gradient(125deg, #240046, #3c096c 45%, #0077b6);
+  background-attachment: fixed;
+}
+
+.crazytown .crazy-confetti {
+  position: fixed;
+  z-index: 20;
+  inset: auto 0 0;
+  display: block;
+  padding: 0.35rem;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 1.5rem;
+  letter-spacing: 4vw;
+  pointer-events: none;
+  animation: confetti-crawl 5s linear infinite;
+}
+
+.crazytown .app-header {
+  border-bottom: 5px dashed #ffe600;
+  background: linear-gradient(90deg, #ff006e, #8338ec, #3a86ff, #06d6a0);
+  background-size: 300% 100%;
+  animation: rainbow-slide 4s linear infinite;
+}
+
+.crazytown .brand h1 {
+  font-size: clamp(1.6rem, 4vw, 3.25rem);
+  color: #ffe600;
+  text-shadow: 3px 3px #ff006e, -3px -3px #3a86ff;
+  transform: rotate(-3deg) skewX(-7deg);
+  animation: title-wobble 900ms ease-in-out infinite alternate;
+}
+
+.crazytown .brand .dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 35% 65% 70% 30%;
+  background: #ffe600;
+  box-shadow: 0 0 0 5px #ff006e, 0 0 0 10px #3a86ff;
+  animation: dot-spin 1.2s linear infinite;
+}
+
+.crazytown .card:nth-child(odd),
+.crazytown .control-group:nth-child(odd) {
+  transform: rotate(-1deg);
+}
+
+.crazytown .card:nth-child(even),
+.crazytown .control-group:nth-child(even) {
+  transform: rotate(1deg);
+}
+
+.crazytown .card,
+.crazytown .panel,
+.crazytown .control-group,
+.crazytown .trade-panel,
+.crazytown .chart-panel {
+  border-width: 3px;
+  box-shadow: 8px 8px 0 #ff006e, -5px -5px 0 #3a86ff;
+}
+
+.crazytown button.primary {
+  background: linear-gradient(90deg, #ffe600, #73fbd3, #ff4fd8);
+  background-size: 200%;
+  animation: rainbow-slide 2s linear infinite;
+}
+
+@keyframes rainbow-slide {
+  to { background-position: 300% 0; }
+}
+
+@keyframes title-wobble {
+  to { transform: rotate(3deg) skewX(7deg) scale(1.08); }
+}
+
+@keyframes dot-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes confetti-crawl {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crazytown *,
+  .crazytown .crazy-confetti {
+    animation: none !important;
+  }
+}
+
 .app-header {
   display: flex;
   align-items: center;
@@ -42,6 +154,23 @@
 nav {
   display: flex;
   gap: 1rem;
+}
+
+@media (max-width: 680px) {
+  .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  nav {
+    flex-wrap: wrap;
+  }
+
+  main {
+    padding: 1.25rem;
+  }
 }
 
 nav a {
@@ -345,4 +474,3 @@ select {
     min-height: 420px;
   }
 }
-
