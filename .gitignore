@@ -1,0 +1,17 @@
+# Dependencies and generated output
+node_modules/
+dist/
+dist-ssr/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Local configuration and logs
+.env.local
+.env.*.local
+*.log
+
+# Operating-system files
+.DS_Store
+Thumbs.db

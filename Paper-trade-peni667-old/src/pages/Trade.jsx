@@ -50,7 +50,7 @@ const Trade = () => {
       </section>
       <section className="trade-panel">
         <header>
-          <h2>Place Trade</h2>
+          <h2>Trade</h2>
           <span className="muted">
             Price:{' '}
             {currentPrice ? `$${formatNumber(currentPrice)}` : 'Fetching…'}
@@ -58,7 +58,7 @@ const Trade = () => {
         </header>
         <div className="form-grid">
           <label>
-            Symbol
+            Asset
             <select value={symbol} onChange={(event) => setSymbol(event.target.value)}>
               {SUPPORTED_SYMBOLS.map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -66,51 +66,51 @@ const Trade = () => {
             </select>
           </label>
           <label>
-            Size
+            Quantity
             <input type="number" min="0" step="0.01" value={size} onChange={(event) => setSize(event.target.value)} />
           </label>
-          <label>
-            Leverage
-            <select value={leverage} onChange={(event) => setLeverage(event.target.value)}>
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
-                <option key={v} value={v}>{v}x</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Stop Loss (optional)
-            <input type="number" min="0" step="0.01" value={stopLoss} onChange={(event) => setStopLoss(event.target.value)} />
-          </label>
-          <label>
-            Take Profit (optional)
-            <input type="number" min="0" step="0.01" value={takeProfit} onChange={(event) => setTakeProfit(event.target.value)} />
-          </label>
         </div>
+        <details className="disclosure advanced-options">
+          <summary>Advanced options{(leverage !== '1' || stopLoss || takeProfit) ? ' · customized' : ''}</summary>
+          <div className="form-grid disclosure-content">
+            <label>
+              Leverage
+              <select value={leverage} onChange={(event) => setLeverage(event.target.value)}>
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
+                  <option key={v} value={v}>{v}x</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Stop Loss (optional)
+              <input type="number" min="0" step="0.01" value={stopLoss} onChange={(event) => setStopLoss(event.target.value)} />
+            </label>
+            <label>
+              Take Profit (optional)
+              <input type="number" min="0" step="0.01" value={takeProfit} onChange={(event) => setTakeProfit(event.target.value)} />
+            </label>
+          </div>
+        </details>
         <div className="button-row">
-          <button type="button" className="primary" onClick={handleBuy}>Buy / Add Long</button>
-          <button type="button" className="ghost" onClick={handleSell}>Sell / Close</button>
+          <button type="button" className="primary" onClick={handleBuy}>Buy</button>
+          <button type="button" className="ghost" onClick={handleSell}>Sell</button>
         </div>
         {error && <p className="error">{error}</p>}
-        <div className="position-card">
-          <h3>Current Position</h3>
-          {existingPosition ? (
+        {existingPosition && (
+          <div className="position-card">
+            <h3>Your position</h3>
             <div className="position-details">
-              <span>Size: {existingPosition.size}</span>
+              <span>Quantity: {existingPosition.size}</span>
               <span>Entry: ${formatNumber(existingPosition.entry_price)}</span>
-              <span>Leverage: {existingPosition.leverage}x</span>
-              <span>
-                SL / TP:{' '}
-                {existingPosition.stop_loss ? `$${formatNumber(existingPosition.stop_loss)}` : '—'} /{' '}
-                {existingPosition.take_profit ? `$${formatNumber(existingPosition.take_profit)}` : '—'}
-              </span>
+              {existingPosition.leverage !== 1 && <span>Leverage: {existingPosition.leverage}x</span>}
+              {existingPosition.stop_loss > 0 && <span>Stop loss: ${formatNumber(existingPosition.stop_loss)}</span>}
+              {existingPosition.take_profit > 0 && <span>Take profit: ${formatNumber(existingPosition.take_profit)}</span>}
               <span className={unrealized >= 0 ? 'positive' : 'negative'}>
                 Unrealized: ${formatNumber(unrealized)}
               </span>
             </div>
-          ) : (
-            <p className="muted">No open position for {symbol}.</p>
-          )}
-        </div>
+          </div>
+        )}
       </section>
     </div>
   )

@@ -27,17 +27,17 @@ function TradingViewWidget({ symbol = 'BTC-USD' }) {
       'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
     script.type = 'text/javascript'
     script.innerHTML = JSON.stringify({
-      allow_symbol_change: true,
+      allow_symbol_change: false,
       calendar: false,
       details: false,
-      hide_side_toolbar: false,
+      hide_side_toolbar: true,
       hide_top_toolbar: false,
       hide_legend: false,
       hide_volume: false,
       hotlist: false,
       interval: '60',
       locale: 'en',
-      save_image: true,
+      save_image: false,
       style: '1',
       symbol: toTradingViewSymbol(symbol),
       theme: 'dark',

@@ -7,14 +7,10 @@ const App = () => (
   <div className="app">
     <header className="app-header">
       <div className="brand">
-        <span className="dot" />
-        <div>
-          <h1>Paper Trade</h1>
-          <p>Client-side paper trading with live market data.</p>
-        </div>
+        <h1>Paper Trade</h1>
       </div>
-      <nav>
-        <NavLink to="/dash">Dashboard</NavLink>
+      <nav aria-label="Main navigation">
+        <NavLink to="/dash">Portfolio</NavLink>
         <NavLink to="/trade">Trade</NavLink>
       </nav>
     </header>
@@ -29,4 +25,3 @@ const App = () => (
 )
 
 export default App
-
