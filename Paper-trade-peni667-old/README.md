@@ -1,33 +1,24 @@
 # Paper Trade
 
-Client-side paper trading app built with React + Vite for Cloudflare Pages. The app stores all portfolio state in IndexedDB and pulls live prices from CoinGecko (crypto) and Finnhub (stocks) using polling.
+One page with an asset selector, quoted price, quantity, Buy/Sell buttons, virtual cash, and holdings. New portfolios start with $10,000 in virtual cash. Data stays in the existing browser IndexedDB database.
 
-## Features
-- Two routes: `/dash` for portfolio dashboard and `/trade` for trading interface.
-- Live market data from CoinGecko (BTC, ETH) and Finnhub (AAPL, TSLA) — no backend required.
-- Trading engine with leverage (1x–10x), stop loss, take profit, and liquidation at -100% loss.
-- IndexedDB persistence with import/export/reset.
-- Dark, minimalist UI with TradingView chart integration.
+No chart, navigation, history screen, portfolio tools, profit dashboards, leverage controls, automatic selling, or background price polling. Prices load when selecting an asset or pressing Refresh. Existing stored trade records remain available internally to reconstruct holdings.
 
-## Getting Started
+## Run
+
 ```bash
-npm install
-cp .env.example .env.local
-# Add your Finnhub API key to .env.local to enable stock quotes.
+npm ci
 npm run dev
 ```
 
-Crypto quotes work without a key. Stock quotes require a Finnhub key in
-`VITE_FINNHUB_API_KEY`; the local environment file is ignored by Git so the key
-is not committed. Market-data requests time out after 10 seconds and surface a
-provider error while retaining the last cached quote.
+BTC/ETH quotes use CoinGecko. AAPL/TSLA quotes require `VITE_FINNHUB_API_KEY` in `.env.local` (see `.env.example`). This is a browser application: that value is visible in the client bundle, not a server secret. Quote errors disable trading until a price is available.
 
-## Build
+## Check and build
+
 ```bash
+npm test
+npm run lint
 npm run build
 ```
 
-## Lint
-```bash
-npm run lint
-```
+Production files are in `dist`. Keep `Paper-trade-peni667-old` as the hosting build directory.

@@ -1,3 +1,0 @@
-cd /d "C:\Users\Devin\Desktop\quant.project"
-
-npm run dev
