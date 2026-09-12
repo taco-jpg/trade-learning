@@ -1,62 +1,60 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { fetchPrice } from '../src/market/prices.js'
 
-import { getProvider } from '../src/market/registry.js'
-import { configureCoinGecko, configureFinnhub } from '../src/market/providers.js'
-
-const cryptoInstrument = { symbol: 'BTC-USD', baseAsset: 'BTC' }
-const equityInstrument = { symbol: 'AAPL', baseAsset: 'AAPL' }
-
-test('CoinGecko provider builds an encoded request and normalizes its response', async () => {
+test('fetches a crypto price from CoinGecko', async () => {
   let requestedUrl
-  configureCoinGecko({}, {
+  const price = await fetchPrice('BTC-USD', {
     fetch: async (url) => {
       requestedUrl = new URL(url)
       return { ok: true, json: async () => ({ bitcoin: { usd: 65000 } }) }
     },
   })
-
-  const result = await getProvider('coingecko').fetch([cryptoInstrument])
-
   assert.equal(requestedUrl.searchParams.get('ids'), 'bitcoin')
   assert.equal(requestedUrl.searchParams.get('vs_currencies'), 'usd')
-  assert.equal(result['BTC-USD'][0].price, 65000)
+  assert.equal(price, 65000)
 })
 
-test('Finnhub provider reports a missing API key instead of a false success', async () => {
-  configureFinnhub({}, { apiKey: '' })
-
-  await assert.rejects(
-    getProvider('finnhub').fetch([equityInstrument]),
-    /VITE_FINNHUB_API_KEY/
-  )
+test('reports missing stock quote configuration', async () => {
+  await assert.rejects(fetchPrice('AAPL', { apiKey: '' }), /not configured/)
 })
 
-test('Finnhub provider sends its configured key and normalizes a quote', async () => {
+test('fetches a stock price with the configured key', async () => {
   let requestedUrl
-  configureFinnhub({}, {
+  const price = await fetchPrice('AAPL', {
     apiKey: 'test key',
     fetch: async (url) => {
       requestedUrl = new URL(url)
-      return { ok: true, json: async () => ({ c: 191.5, l: 190, h: 192, t: 1700000000 }) }
+      return { ok: true, json: async () => ({ c: 191.5 }) }
     },
   })
-
-  const result = await getProvider('finnhub').fetch([equityInstrument])
-
+  assert.equal(requestedUrl.searchParams.get('symbol'), 'AAPL')
   assert.equal(requestedUrl.searchParams.get('token'), 'test key')
-  assert.equal(result.AAPL[0].price, 191.5)
-  assert.equal(result.AAPL[0].timestamp, 1700000000000)
+  assert.equal(price, 191.5)
 })
 
-test('Finnhub provider propagates API failures to the router', async () => {
-  configureFinnhub({}, {
-    apiKey: 'test-key',
+test('reports failed quote requests', async () => {
+  await assert.rejects(fetchPrice('BTC-USD', {
     fetch: async () => ({ ok: false, status: 429 }),
-  })
+  }), /Quote request failed \(429\)/)
+})
 
-  await assert.rejects(
-    getProvider('finnhub').fetch([equityInstrument]),
-    /HTTP 429/
-  )
+test('rejects prices that cannot be used for a trade', async () => {
+  for (const price of [undefined, null, 0, -1, Infinity, '65000']) {
+    await assert.rejects(fetchPrice('BTC-USD', {
+      fetch: async () => ({ ok: true, json: async () => ({ bitcoin: { usd: price } }) }),
+    }), /No valid price/)
+  }
+})
+
+test('cancels an in-flight request when its caller aborts', async () => {
+  const controller = new AbortController()
+  const request = fetchPrice('ETH-USD', {
+    signal: controller.signal,
+    fetch: async (url, { signal }) => new Promise((resolve, reject) => {
+      signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+    }),
+  })
+  controller.abort()
+  await assert.rejects(request, { name: 'AbortError' })
 })

@@ -1,8 +1,6 @@
 # Trade Learning
 
-The application is in [`Paper-trade-peni667-old`](./Paper-trade-peni667-old). The directory name is retained so existing build and hosting paths keep working.
-
-## Development
+A one-page paper-trading demo: choose an asset, fetch its price, buy or sell with virtual cash, and view holdings. The browser saves the portfolio.
 
 ```bash
 cd Paper-trade-peni667-old
@@ -10,14 +8,6 @@ npm ci
 npm run dev
 ```
 
-## Checks and production build
+Run `npm test`, `npm run lint`, and `npm run build` from the same directory. Build output is `dist`. The directory name stays the same for existing hosting configuration.
 
-Run these commands from the application directory:
-
-```bash
-npm run lint
-npm test
-npm run build
-```
-
-See the [application README](./Paper-trade-peni667-old/README.md) for the interface, local data storage, and configuration.
+See the [app README](./Paper-trade-peni667-old/README.md) for quote configuration.
